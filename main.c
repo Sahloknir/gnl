@@ -1,24 +1,33 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   get_next_line.h                                    :+:      :+:    :+:   */
+/*   main.c                                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: axbal <marvin@42.fr>                       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2018/01/15 12:04:51 by axbal             #+#    #+#             */
-/*   Updated: 2018/01/15 17:25:18 by axbal            ###   ########.fr       */
+/*   Created: 2018/01/15 12:17:30 by axbal             #+#    #+#             */
+/*   Updated: 2018/01/15 17:20:42 by axbal            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef GET_NEXT_LINE_H
-# define GET_NEXT_LINE_H
+#include "get_next_line.h"
+#include <fcntl.h>
 
-# define BUFF_SIZE 1
+int		main(int argc, char **argv)
+{
+	int		fd;
+	int		retour;
+	char	*line;
 
-# include <stdlib.h>
-# include <unistd.h>
-# include "libft/libft.h"
-
-int		get_next_line(const int fd, char **line);
-
-#endif
+	line = NULL;
+	if (argc == 1)
+		return (0);
+	fd = open (argv[1], O_RDONLY);
+	while ((retour = get_next_line(fd, &line)) == 1)
+	{
+		ft_putnbr(retour);
+		ft_putstr(line);
+		ft_putchar('\n');
+	}
+	return (0);
+}

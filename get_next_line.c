@@ -5,44 +5,32 @@
 /*                                                    +:+ +:+         +:+     */
 /*   By: axbal <marvin@42.fr>                       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2017/12/17 22:42:55 by axbal             #+#    #+#             */
-/*   Updated: 2018/01/16 13:18:37 by axbal            ###   ########.fr       */
+/*   Created: 2018/01/15 12:24:58 by axbal             #+#    #+#             */
+/*   Updated: 2018/01/15 17:34:10 by axbal            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "get_next_line.h"
 
-char	*ft_got_the_line(char *stock)
+int		find_line(char *buf, int ret)
 {
-	char	*line;
 	int		i;
 
 	i = 0;
-	while (stock[i] != '\n' && stock[i] != '\0')
+	if (buf == NULL)
+		return (0);
+	while (i < ret && buf[i])
+	{
+		if (buf[i] == '\n')
+			return (1);
+		if (buf[i] == '\0')
+			return (2);
 		i++;
-	if (!(line = (char *)malloc(sizeof(char) * (i + 1))))
-		return (NULL);
-	ft_memcpy(line, stock, i);
-	line[i] = '\0';
-	return (line);
+	}
+	return (0);
 }
 
-char	*ft_dupncat(char *dst, char *src)
-{
-	char	*tmp;
-
-	tmp = ft_strdup(dst);
-	if (dst)
-		free(dst);
-	if (!(dst = malloc(sizeof(char) * ft_strlen(tmp) + ft_strlen(src) + 1)))
-		return (NULL);
-	dst = ft_strcpy(dst, tmp);
-	dst = ft_strcat(dst, src);
-	free(tmp);
-	return (dst);
-}
-
-char	*ft_keep_stock(char *stock)
+char	*fill_line(char *buf, char **line)
 {
 	int		i;
 	int		j;
@@ -50,63 +38,67 @@ char	*ft_keep_stock(char *stock)
 
 	i = 0;
 	j = 0;
-	while (stock[i] != '\n' && stock[i] != '\0')
+	while (buf[i] != '\0' && buf[i] != '\n')
 		i++;
-	if (stock[i] == '\0')
-		ft_bzero(stock, ft_strlen(stock));
-	while (stock[i + j] != '\0')
-		j++;
-	if (!(tmp = malloc(sizeof(char) * j + 1)))
+	if (*line != NULL)
+		free(*line);
+	if (!(*line = malloc(sizeof(char) * (i + 1))))
 		return (NULL);
-	j = 0;
-	while (stock[i + j] != '\0')
-	{
-		tmp[j] = stock[i + j];
-		j++;
-	}
-	tmp[j] = '\0';
-	free(stock);
-	stock = ft_strdup(tmp);
+	*line = ft_strncpy(*line, buf, i);
+	tmp = ft_strdup(buf + i + 1);
+	free(buf);
+	buf = ft_strdup(tmp);
 	free(tmp);
-	return (stock);
+	return (buf);
 }
 
-char	*ft_fill(char **line, char *stock)
+char	*concat_buf(char *save, char *buf)
 {
-	*line = ft_got_the_line(stock);
-	stock = ft_keep_stock(stock);
-	return (stock);
+	char	*tmp;
+
+	tmp = NULL;
+	if (save != NULL)
+	{
+		tmp = ft_strdup(save);
+		free(save);
+		if (!(save = malloc(sizeof(char) * (ft_strlen(tmp) + ft_strlen(buf) + 1))))
+			return (NULL);
+		save = ft_strcpy(save, tmp);
+		save = ft_strcat(save, buf);
+		free(tmp);
+	}
+	else
+	{
+		if (!(save = malloc(sizeof(char) * (ft_strlen(buf) + 1))))
+			return (NULL);
+		save = ft_strcpy(save, buf);
+	}
+	return (save);
 }
 
-int		get_next_line(int fd, char **line)
+int		get_next_line(const int fd, char **line)
 {
-	static char		*stock;
-	char			buf[BUFF_SIZE];
+	int				stop;
 	int				ret;
+	char			buf[BUFF_SIZE + 1];
+	static char		*save;
 
+	stop = 0;
 	if (fd < 1 || fd == 2)
 		return (-1);
-	if (ft_strstr(stock, "\n") != NULL)
+	while (stop == 0)
 	{
-		*line = ft_got_the_line(stock);
-		stock = ft_keep_stock(stock);
-		return (1);
-	}
-	while (ft_strstr(stock, "\n") == NULL)
-	{
-		if ((ret = read(fd, buf, BUFF_SIZE)) == BUFF_SIZE)
+		if ((ret = read(fd, buf, BUFF_SIZE)) > 0)
 		{
 			buf[ret] = '\0';
-			stock = ft_dupncat(stock, buf);
+			stop = find_line(buf, ret);
+			save = concat_buf(save, buf);
 		}
-		else if (ret == -1)
-			return (-1);
 		else
-		{
-			buf[ret] = '\0';
-			break ;
-		}
+			stop = 2;
 	}
-	stock = ft_fill(line, stock);
-	return (0);
+	save = fill_line(save, line);
+	if (stop == 2)
+		return (0);
+	return (1);
 }
