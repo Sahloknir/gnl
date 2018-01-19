@@ -6,7 +6,7 @@
 /*   By: axbal <marvin@42.fr>                       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2018/01/15 12:24:58 by axbal             #+#    #+#             */
-/*   Updated: 2018/01/16 16:01:46 by axbal            ###   ########.fr       */
+/*   Updated: 2018/01/19 15:14:27 by axbal            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,10 +36,15 @@ char	*fill_line(char *buf, char **line)
 	char	*tmp;
 
 	i = 0;
+	if (!(buf))
+	{
+		*line = "";
+		return (NULL);
+	}
 	while (buf[i] != '\0' && buf[i] != '\n')
 		i++;
 	buf[i] = '\0';
-	if (*line != NULL)
+	if (*line)
 		free(*line);
 	*line = ft_strdup(buf);
 	buf[i] = ' ';
@@ -91,7 +96,7 @@ int		get_next_line(const int fd, char **line)
 	static char		*save;
 
 	stop = 0;
-	if (fd < 0 || fd == 2)
+	if ((fd < 3 && fd != 0) || BUFF_SIZE <= 0)
 		return (-1);
 	if (save && find_line(save, ft_strlen(save)) == 1)
 		stop = 1;
@@ -103,11 +108,13 @@ int		get_next_line(const int fd, char **line)
 			stop = find_line(buf, ret);
 			save = concat_buf(save, buf);
 		}
+		else if (ret == -1)
+			return (-1);
 		else
 			stop = 3;
 	}
 	save = fill_line(save, line);
-	if (ft_strlen(save) <= 0 && stop == 3)
+	if (stop == 3 && ft_strlen(*line) == 0)
 		return (0);
 	return (1);
 }
