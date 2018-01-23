@@ -6,11 +6,12 @@
 /*   By: axbal <marvin@42.fr>                       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2018/01/15 12:24:58 by axbal             #+#    #+#             */
-/*   Updated: 2018/01/19 15:14:27 by axbal            ###   ########.fr       */
+/*   Updated: 2018/01/23 13:52:39 by axbal            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "get_next_line.h"
+#include <stdio.h>
 
 int		find_line(char *buf, int ret)
 {
@@ -44,8 +45,6 @@ char	*fill_line(char *buf, char **line)
 	while (buf[i] != '\0' && buf[i] != '\n')
 		i++;
 	buf[i] = '\0';
-	if (*line)
-		free(*line);
 	*line = ft_strdup(buf);
 	buf[i] = ' ';
 	if (buf + i + 1)
@@ -56,11 +55,8 @@ char	*fill_line(char *buf, char **line)
 		free(tmp);
 	}
 	else
-	{
 		free(buf);
-		return (NULL);
-	}
-	return (buf);
+	return (buf == NULL ? NULL : buf);
 }
 
 char	*concat_buf(char *save, char *buf)
@@ -88,6 +84,27 @@ char	*concat_buf(char *save, char *buf)
 	return (save);
 }
 
+int		norm(int ret, int *stop, char *save, int mode)
+{
+	int		i;
+
+	if (mode == 1)
+	{
+		if (ret == -1)
+			return (-1);
+		else
+			*stop = 3;
+		return (0);
+	}
+	if (mode == 2)
+	{
+		i = 0;
+		while (save[i] != '\0')
+			save[i++] = '\0';
+	}
+	return (0);
+}
+
 int		get_next_line(const int fd, char **line)
 {
 	int				stop;
@@ -96,7 +113,7 @@ int		get_next_line(const int fd, char **line)
 	static char		*save;
 
 	stop = 0;
-	if ((fd < 3 && fd != 0) || BUFF_SIZE <= 0)
+	if ((fd < 3 && fd != 0) || BUFF_SIZE <= 0 || line == NULL)
 		return (-1);
 	if (save && find_line(save, ft_strlen(save)) == 1)
 		stop = 1;
@@ -108,13 +125,11 @@ int		get_next_line(const int fd, char **line)
 			stop = find_line(buf, ret);
 			save = concat_buf(save, buf);
 		}
-		else if (ret == -1)
+		else if (norm(ret, &stop, NULL, 1) == -1)
 			return (-1);
-		else
-			stop = 3;
 	}
 	save = fill_line(save, line);
 	if (stop == 3 && ft_strlen(*line) == 0)
-		return (0);
+		return (norm(0, 0, save, 2));
 	return (1);
 }
