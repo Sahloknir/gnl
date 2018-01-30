@@ -6,14 +6,14 @@
 /*   By: axbal <marvin@42.fr>                       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2018/01/15 12:04:51 by axbal             #+#    #+#             */
-/*   Updated: 2018/01/23 15:09:21 by axbal            ###   ########.fr       */
+/*   Updated: 2018/01/25 11:18:01 by axbal            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef GET_NEXT_LINE_H
 # define GET_NEXT_LINE_H
 
-# define BUFF_SIZE 1
+# define BUFF_SIZE 2048
 
 # include <stdlib.h>
 # include <unistd.h>
