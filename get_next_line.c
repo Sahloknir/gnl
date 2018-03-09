@@ -5,131 +5,95 @@
 /*                                                    +:+ +:+         +:+     */
 /*   By: axbal <marvin@42.fr>                       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2018/01/15 12:24:58 by axbal             #+#    #+#             */
-/*   Updated: 2018/01/23 13:52:39 by axbal            ###   ########.fr       */
+/*   Created: 2018/03/08 15:34:03 by axbal             #+#    #+#             */
+/*   Updated: 2018/03/08 17:56:40 by axbal            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "get_next_line.h"
 #include <stdio.h>
 
-int		find_line(char *buf, int ret)
+char	*cat_buff(char *save, char *buf)
 {
-	int		i;
-
-	i = 0;
-	if (buf == NULL)
-		return (0);
-	while (i < ret && buf[i])
-	{
-		if (buf[i] == '\n')
-			return (1);
-		if (buf[i] == '\0')
-			return (2);
-		i++;
-	}
-	return (0);
-}
-
-char	*fill_line(char *buf, char **line)
-{
-	int		i;
 	char	*tmp;
 
-	i = 0;
-	if (!(buf))
-	{
-		*line = "";
+	tmp = ft_strdup(save);
+	free(save);
+	if (!(save = (char *)malloc(sizeof(char) * (ft_strlen(tmp) + ft_strlen(buf) + 1))))
 		return (NULL);
-	}
-	while (buf[i] != '\0' && buf[i] != '\n')
-		i++;
-	buf[i] = '\0';
-	*line = ft_strdup(buf);
-	buf[i] = ' ';
-	if (buf + i + 1)
-	{
-		tmp = ft_strdup(buf + i + 1);
-		free(buf);
-		buf = ft_strdup(tmp);
-		free(tmp);
-	}
-	else
-		free(buf);
-	return (buf == NULL ? NULL : buf);
-}
-
-char	*concat_buf(char *save, char *buf)
-{
-	char	*tmp;
-	int		size;
-
-	tmp = NULL;
-	if (save != NULL)
-	{
-		tmp = ft_strdup(save);
-		free(save);
-		size = ft_strlen(tmp) + ft_strlen(buf) + 1;
-		if (!(save = malloc(sizeof(char) * size)))
-			return (NULL);
-		save = ft_strcpy(save, tmp);
-		save = ft_strcat(save, buf);
-		free(tmp);
-	}
-	else
-	{
-		size = ft_strlen(buf) + 1;
-		save = ft_strdup(buf);
-	}
+	save = ft_strcpy(save, tmp);
+	free(tmp);
+	save = ft_strcat(save, buf);
 	return (save);
 }
 
-int		norm(int ret, int *stop, char *save, int mode)
+int		find_line(char *str)
 {
 	int		i;
 
-	if (mode == 1)
-	{
-		if (ret == -1)
-			return (-1);
-		else
-			*stop = 3;
+	i = 0;
+	if (!str)
 		return (0);
-	}
-	if (mode == 2)
+	while (str[i] != '\0' && str[i] != '\n')
+		i++;
+	if (str[i] == '\n')
+		return (1);
+	return (0);
+}
+
+int		fill_line(char **save, char **line, int mode)
+{
+	int		i;
+	char	*tmp;
+
+	i = 0;
+	while ((*save)[i] != '\n' && (*save)[i] != '\0')
+		i++;
+	if (!(*line = (char *)malloc(sizeof(char) * (i + 1))))
+		return (-1);
+	*line = ft_strncpy(*line, *save, i);
+	(*line)[i] = '\0';
+	if (mode == 1 || mode == 2)
 	{
-		i = 0;
-		while (save[i] != '\0')
-			save[i++] = '\0';
+		tmp = ft_strdup(*save + i + 1);
+		ft_bzero(*save, ft_strlen(*save));
+		*save = ft_strdup(tmp);
+		free(tmp);
 	}
+	if (mode == 2 || mode == 3)
+		ft_bzero(*save, ft_strlen(*save));
+	if (mode == 3)
+		*line = "";
+	if (mode != 3)
+		return (1);
 	return (0);
 }
 
 int		get_next_line(const int fd, char **line)
 {
-	int				stop;
-	int				ret;
-	char			buf[BUFF_SIZE + 1];
+	char			*buf;
 	static char		*save;
+	int				ret;
+	int				stop;
 
-	stop = 0;
-	if ((fd < 3 && fd != 0) || BUFF_SIZE <= 0 || line == NULL)
+	if ((fd < 3 && fd != 0) || !line
+		|| !(buf = (char *)malloc(sizeof(char) * BUFF_SIZE + 1)))
 		return (-1);
-	if (save && find_line(save, ft_strlen(save)) == 1)
-		stop = 1;
-	while (stop == 0)
+	stop = find_line(save);
+	while (stop == 0 && (ret = read(fd, buf, BUFF_SIZE)) > 0)
 	{
-		if ((ret = read(fd, buf, BUFF_SIZE)) > 0)
-		{
-			buf[ret] = '\0';
-			stop = find_line(buf, ret);
-			save = concat_buf(save, buf);
-		}
-		else if (norm(ret, &stop, NULL, 1) == -1)
-			return (-1);
+		buf[ret] = '\0';
+		if (!save)
+			save = ft_strdup(buf);
+		else
+			save = cat_buff(save, buf);
+		stop = find_line(save);
 	}
-	save = fill_line(save, line);
-	if (stop == 3 && ft_strlen(*line) == 0)
-		return (norm(0, 0, save, 2));
-	return (1);
+	if (ret == -1)
+		return (-1);
+	else if (stop == 1)
+		return (fill_line(&save, line, 1));
+	else if (ft_strlen(save) > 0)
+		return (fill_line(&save, line, 2));
+	return (fill_line(&save, line, 3));
 }
