@@ -6,12 +6,11 @@
 /*   By: axbal <marvin@42.fr>                       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2018/03/08 15:34:03 by axbal             #+#    #+#             */
-/*   Updated: 2018/03/08 17:56:40 by axbal            ###   ########.fr       */
+/*   Updated: 2018/03/09 14:31:57 by axbal            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "get_next_line.h"
-#include <stdio.h>
 
 char	*cat_buff(char *save, char *buf)
 {
@@ -19,7 +18,8 @@ char	*cat_buff(char *save, char *buf)
 
 	tmp = ft_strdup(save);
 	free(save);
-	if (!(save = (char *)malloc(sizeof(char) * (ft_strlen(tmp) + ft_strlen(buf) + 1))))
+	if (!(save = (char *)malloc(sizeof(char)
+		* (ft_strlen(tmp) + ft_strlen(buf) + 1))))
 		return (NULL);
 	save = ft_strcpy(save, tmp);
 	free(tmp);
@@ -57,7 +57,7 @@ int		fill_line(char **save, char **line, int mode)
 	{
 		tmp = ft_strdup(*save + i + 1);
 		ft_bzero(*save, ft_strlen(*save));
-		*save = ft_strdup(tmp);
+		*save = ft_strcpy(*save, tmp);
 		free(tmp);
 	}
 	if (mode == 2 || mode == 3)
@@ -83,12 +83,10 @@ int		get_next_line(const int fd, char **line)
 	while (stop == 0 && (ret = read(fd, buf, BUFF_SIZE)) > 0)
 	{
 		buf[ret] = '\0';
-		if (!save)
-			save = ft_strdup(buf);
-		else
-			save = cat_buff(save, buf);
+		save = save ? cat_buff(save, buf) : ft_strdup(buf);
 		stop = find_line(save);
 	}
+	free(buf);
 	if (ret == -1)
 		return (-1);
 	else if (stop == 1)
